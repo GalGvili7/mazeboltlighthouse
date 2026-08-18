@@ -2,7 +2,7 @@
   "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "rgName": {
+    " resource group": {
       "type": "string",
       "metadata": {
         "description": "Name of the resource group that contains the Front Door WAF policy to delegate. This is the ONLY value the customer provides."
@@ -17,7 +17,7 @@
     "offerName": "MazeBolt DDoS WAF Automation",
     "offerDescription": "Lets MazeBolt apply/update Front Door WAF custom rules on request.",
     "mspRegistrationName": "[guid(variables('offerName'))]",
-    "mspAssignmentName": "[guid(parameters('rgName'), variables('offerName'))]",
+    "mspAssignmentName": "[guid(parameters('Resource Group'), variables('offerName'))]",
     "authorizations": [
       {
         "principalId": "[variables('principalId')]",
@@ -42,7 +42,7 @@
       "type": "Microsoft.Resources/deployments",
       "apiVersion": "2021-04-01",
       "name": "mazebolt-waf-rg-assignment",
-      "resourceGroup": "[parameters('rgName')]",
+      "resourceGroup": "[parameters(' resource group')]",
       "dependsOn": [
         "[resourceId('Microsoft.ManagedServices/registrationDefinitions', variables('mspRegistrationName'))]"
       ],
@@ -70,7 +70,7 @@
     "offerName": { "type": "string", "value": "[variables('offerName')]" },
     "delegatedScope": {
       "type": "string",
-      "value": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'))]"
+      "value": "[concat(subscription().id, '/resourceGroups/', parameters(' resource group'))]"
     }
   }
 }
