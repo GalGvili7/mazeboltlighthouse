@@ -1,0 +1,76 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2018-05-01/subscriptionDeploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "rgName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the resource group that contains the Front Door WAF policy to delegate. This is the ONLY value the customer provides."
+      }
+    }
+  },
+  "variables": {
+    "managedByTenantId": "80fc0aef-83fb-4e0f-a8c8-456ac42c0cde",
+    "principalId": "115e6d89-a737-44b2-b635-8f5b485fb067",
+    "principalDisplayName": "MazeBolt WAF automation (service principal)",
+    "roleDefinitionId": "4d97b98b-1d4f-4787-a291-c67834d212e7",
+    "offerName": "MazeBolt DDoS WAF Automation",
+    "offerDescription": "Lets MazeBolt apply/update Front Door WAF custom rules on request.",
+    "mspRegistrationName": "[guid(variables('offerName'))]",
+    "mspAssignmentName": "[guid(parameters('rgName'), variables('offerName'))]",
+    "authorizations": [
+      {
+        "principalId": "[variables('principalId')]",
+        "principalIdDisplayName": "[variables('principalDisplayName')]",
+        "roleDefinitionId": "[variables('roleDefinitionId')]"
+      }
+    ]
+  },
+  "resources": [
+    {
+      "type": "Microsoft.ManagedServices/registrationDefinitions",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('mspRegistrationName')]",
+      "properties": {
+        "registrationDefinitionName": "[variables('offerName')]",
+        "description": "[variables('offerDescription')]",
+        "managedByTenantId": "[variables('managedByTenantId')]",
+        "authorizations": "[variables('authorizations')]"
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2021-04-01",
+      "name": "mazebolt-waf-rg-assignment",
+      "resourceGroup": "[parameters('rgName')]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ManagedServices/registrationDefinitions', variables('mspRegistrationName'))]"
+      ],
+      "properties": {
+        "mode": "Incremental",
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "parameters": {},
+          "resources": [
+            {
+              "type": "Microsoft.ManagedServices/registrationAssignments",
+              "apiVersion": "2022-10-01",
+              "name": "[variables('mspAssignmentName')]",
+              "properties": {
+                "registrationDefinitionId": "[resourceId('Microsoft.ManagedServices/registrationDefinitions', variables('mspRegistrationName'))]"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "offerName": { "type": "string", "value": "[variables('offerName')]" },
+    "delegatedScope": {
+      "type": "string",
+      "value": "[concat(subscription().id, '/resourceGroups/', parameters('rgName'))]"
+    }
+  }
+}
